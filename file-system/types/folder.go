@@ -2,7 +2,7 @@ package types
 
 type Folder struct {
 	Name     string
-	Contents []FolderContent
+	Contents map[string]FolderContent
 }
 
 func (f *Folder) GetName() string {

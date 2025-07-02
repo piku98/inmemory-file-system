@@ -24,7 +24,7 @@ type InMemoryFileSystem struct {
 func NewInMemoryFileSystem() *InMemoryFileSystem {
 	rootFolder := &types.Folder{
 		Name:     "~",
-		Contents: []types.FolderContent{},
+		Contents: make(map[string]types.FolderContent),
 	}
 	return &InMemoryFileSystem{
 		Root:          rootFolder,
@@ -48,28 +48,44 @@ func (fs *InMemoryFileSystem) traverse(folderStrings []string, createNodeIfNotPr
 
 	for folderStringsIdx < len(folderStrings) {
 
-		folderFound := false
-		for _, content := range currentFolder.Contents {
-			if content.GetFolderContentType() == types.FolderContentTypeFile ||
-				content.GetName() != folderStrings[folderStringsIdx] {
-				continue
-			}
-			currentFolder = content.(*types.Folder)
-			folderFound = true
-		}
+		// folderFound := false
+		// for _, content := range currentFolder.Contents {
+		// 	if content.GetFolderContentType() == types.FolderContentTypeFile ||
+		// 		content.GetName() != folderStrings[folderStringsIdx] {
+		// 		continue
+		// 	}
+		// 	currentFolder = content.(*types.Folder)
+		// 	folderFound = true
+		// }
 
-		if !folderFound {
+		foundFolder, ok := currentFolder.Contents[folderStrings[folderStringsIdx]]
+		if !ok {
 			if createNodeIfNotPresent {
 				folder := &types.Folder{
 					Name:     folderStrings[folderStringsIdx],
-					Contents: []types.FolderContent{},
+					Contents: make(map[string]types.FolderContent),
 				}
-				currentFolder.Contents = append(currentFolder.Contents, folder)
+				currentFolder.Contents[folder.Name] = folder
 				currentFolder = folder
 			} else {
 				return nil, fmt.Errorf("folder not found")
 			}
+		} else {
+			currentFolder = foundFolder.(*types.Folder)
 		}
+
+		// if !folderFound {
+		// 	if createNodeIfNotPresent {
+		// 		folder := &types.Folder{
+		// 			Name:     folderStrings[folderStringsIdx],
+		// 			Contents: map[string]types.FolderContent{},
+		// 		}
+		// 		currentFolder.Contents[folder.Name] = folder
+		// 		currentFolder = folder
+		// 	} else {
+		// 		return nil, fmt.Errorf("folder not found")
+		// 	}
+		// }
 		folderStringsIdx += 1
 	}
 	return currentFolder, nil
@@ -86,10 +102,10 @@ func (fs *InMemoryFileSystem) Cd(path string) error {
 }
 
 func (fs *InMemoryFileSystem) Ls() []string {
-	contentStrings := make([]string, len(fs.currentFolder.Contents))
+	contentStrings := make([]string, 0, len(fs.currentFolder.Contents))
 
-	for idx, content := range fs.currentFolder.Contents {
-		contentStrings[idx] = content.GetName()
+	for contentName := range fs.currentFolder.Contents {
+		contentStrings = append(contentStrings, contentName)
 	}
 
 	return contentStrings
