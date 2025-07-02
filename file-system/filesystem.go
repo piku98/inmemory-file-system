@@ -17,7 +17,7 @@ type FileSystem interface {
 }
 
 type InMemoryFileSystem struct {
-	Root          *types.Folder
+	root          *types.Folder
 	currentFolder *types.Folder
 }
 
@@ -27,7 +27,7 @@ func NewInMemoryFileSystem() *InMemoryFileSystem {
 		Contents: make(map[string]types.FolderContent),
 	}
 	return &InMemoryFileSystem{
-		Root:          rootFolder,
+		root:          rootFolder,
 		currentFolder: rootFolder,
 	}
 }
@@ -42,21 +42,11 @@ func (fs *InMemoryFileSystem) traverse(folderStrings []string, createNodeIfNotPr
 	currentFolder := fs.currentFolder
 
 	if folderStrings[0] == "~" {
-		currentFolder = fs.Root
+		currentFolder = fs.root
 		folderStringsIdx += 1
 	}
 
 	for folderStringsIdx < len(folderStrings) {
-
-		// folderFound := false
-		// for _, content := range currentFolder.Contents {
-		// 	if content.GetFolderContentType() == types.FolderContentTypeFile ||
-		// 		content.GetName() != folderStrings[folderStringsIdx] {
-		// 		continue
-		// 	}
-		// 	currentFolder = content.(*types.Folder)
-		// 	folderFound = true
-		// }
 
 		foundFolder, ok := currentFolder.Contents[folderStrings[folderStringsIdx]]
 		if !ok {
@@ -74,18 +64,6 @@ func (fs *InMemoryFileSystem) traverse(folderStrings []string, createNodeIfNotPr
 			currentFolder = foundFolder.(*types.Folder)
 		}
 
-		// if !folderFound {
-		// 	if createNodeIfNotPresent {
-		// 		folder := &types.Folder{
-		// 			Name:     folderStrings[folderStringsIdx],
-		// 			Contents: map[string]types.FolderContent{},
-		// 		}
-		// 		currentFolder.Contents[folder.Name] = folder
-		// 		currentFolder = folder
-		// 	} else {
-		// 		return nil, fmt.Errorf("folder not found")
-		// 	}
-		// }
 		folderStringsIdx += 1
 	}
 	return currentFolder, nil
@@ -147,6 +125,6 @@ func (fs *InMemoryFileSystem) Open(path string) ([]byte, error) {
 }
 
 func (fs *InMemoryFileSystem) ShowTree() string {
-	tree, _ := json.MarshalIndent(fs.Root, " ", " ")
+	tree, _ := json.MarshalIndent(fs.root, " ", " ")
 	return string(tree)
 }
